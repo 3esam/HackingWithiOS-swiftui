@@ -15,16 +15,24 @@ struct ContentView: View {
     
     let tipPercentages = [10, 15, 20, 25, 0]
     
-    var totalPerPerson: Double{
-        // calculate total per person.
-        let peopleCount = Double(numberOfPeople + 2)
+    var grandTotal: Double{
         let tipSelection = Double(tipPercentage)
         
         let tipValue = checkAmount / 100 * tipSelection
         let grandTotal = checkAmount + tipValue
+        
+        return grandTotal
+    }
+    
+    var totalPerPerson: Double{
+        let peopleCount = Double(numberOfPeople + 2)
         let amountPerPerson = grandTotal / peopleCount
         
         return amountPerPerson
+    }
+    
+    var currency: FloatingPointFormatStyle<Double>.Currency{
+        .currency(code: Locale.current.currencyCode ?? "EGP")
     }
     
     var body: some View {
@@ -44,17 +52,19 @@ struct ContentView: View {
                 
                 Section{
                     Picker("Tip percentage", selection: $tipPercentage){
-                        ForEach(tipPercentages, id: \.self){
+                        ForEach(0..<101){
                             Text($0, format: .percent)
                         }
                     }
-                    .pickerStyle(.segmented)
-                }
-                header:{Text("Tip Percentage?")}
+                }header:{Text("Tip Percentage?")}
                 
                 Section{
-                    Text(totalPerPerson, format: .currency(code: Locale.current.currencyCode ?? "EGP"))
-                }
+                    Text(grandTotal,format: currency)
+                }header: {Text("Grand Total")}
+                
+                Section{
+                    Text(totalPerPerson, format: currency)
+                }header: {Text("Amount per person")}
             }
             .navigationTitle("WeSplit")
             .toolbar {
