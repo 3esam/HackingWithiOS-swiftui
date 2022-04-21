@@ -8,105 +8,85 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var showingAlert = false
+    @State private var showingScore = false
+    @State private var scoreTitle = ""
     
+    @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
+    @State private var correctAnswer = Int.random(in: 0...2)
+
     var body: some View {
-        VStack(spacing: 20){
+        ZStack{
+//            LinearGradient(gradient: Gradient(colors: [.blue, .black]), startPoint: .topLeading, endPoint: .bottomTrailing)
+//                .ignoresSafeArea()
+            
+            RadialGradient(stops: [
+                .init(color: Color(red: 0.1, green: 0.2, blue: 0.45), location: 0.3),
+                .init(color: Color(red: 0.76, green: 0.15, blue: 0.2), location: 0.3)
+            ], center: .top, startRadius: 200, endRadius: 700)
+            .ignoresSafeArea()
+            
             VStack{
-                ForEach(0..<3){ row in
-                    HStack{
-                        ForEach(0..<3){ column in
-                            Text("\(row+1) * \(column+1)")
+                Spacer()
+                
+                Text("Guess the Flag")
+                    .font(.largeTitle.bold())
+                    .foregroundColor(.white)
+            
+                VStack(spacing: 15){
+                    VStack{
+                        Text("Tap the flag of")
+                            .foregroundStyle(.secondary)
+                            .font(.subheadline.weight(.heavy))
+                        Text(countries[correctAnswer])
+                            .font(.largeTitle.weight(.semibold))
+                    }
+                    
+                    ForEach(0..<3) { number in
+                        Button {
+                            flagTapped(number)
+                        }label: {
+                            Image(countries[number])
+                                .renderingMode(.original)
+                                .clipShape(Capsule())
+                                .shadow(radius: 5)
                         }
                     }
                 }
-            }
-            
-            ZStack{
-                Color.red
-                    .frame(width: 40, height: 40)
-                Text("your content")
-            }
-            
-            HStack{
-                LinearGradient(gradient: Gradient(colors: [.blue, .black]), startPoint: .top, endPoint: .bottom)
-                LinearGradient(gradient: Gradient(stops: [
-                    .init(color: .blue, location: 0.45),
-                    .init(color: .black, location: 0.60)
-                ]), startPoint: .top, endPoint: .bottom)
-            }
-            
-            HStack{
-                RadialGradient(gradient: Gradient(colors: [.yellow, .green]), center: .center, startRadius: 10, endRadius: 100)
-                AngularGradient(gradient: Gradient(colors: [.red, .yellow, .green, .blue, .purple, .red]), center: .center)
-            }
-            
-            ZStack{
-                VStack(spacing: 0){
-                    Color.orange
-                    Color.indigo
-                }
-                Text("Translucent")
-//                    .foregroundColor(.secondary)
-                    .foregroundStyle(.secondary)
-                    .padding()
-                    .background(.ultraThinMaterial)
-            }
-            
-            HStack{
-                Button("B1", role: .destructive) {}
-                    .buttonStyle(.bordered)
-                Button("Alert", action: executeDelete)
-                    .buttonStyle(.bordered)
-                    .tint(.mint)
-                Button("B3", role: .destructive) {}
-                    .buttonStyle(.borderedProminent)
-                Button("B4", action: executeDelete)
-                    .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 40))
                 
+                Spacer()
+                Spacer()
                 
-                Button{
-                    print("B6")
-                } label: {
-                    Image(systemName: "person")
-                        .renderingMode(.original) // this works on images only.
-                }
+                Text("Score: ???")
+                    .foregroundColor(.white)
+                    .font(.title.bold())
                 
-                Button{
-                    print("B5")
-                } label: {
-                    Text("B5")
-                        .padding(5)
-                        .foregroundColor(.primary)
-                        .background(.secondary)
-                }
-                
-                Button{
-                    print("B6")
-                } label: {
-                    Label("edit", systemImage: "pencil")
-                }
+                Spacer()
             }
-            
-            HStack{
-            }
-            
-            ZStack{
-                Color.blue
-                Text("Ignore safe area")
-            }
-            .ignoresSafeArea()
+            .padding()
         }
-        .alert("An alert", isPresented: $showingAlert){
-            Button("Delete", role: .destructive) {}
-            Button("Cancel", role: .cancel) {}
+        .alert(scoreTitle, isPresented: $showingScore){
+            Button("Continue", action: askQuestion)
         }message: {
-            Text("Please read this")
+            Text("your score is ???")
         }
     }
     
-    func executeDelete() {
-        showingAlert = true
+    func flagTapped(_ number: Int){
+        if number == correctAnswer{
+            scoreTitle = "Correct"
+        }else{
+            scoreTitle = "Wrong"
+        }
+        showingScore = true
+    }
+    
+    func askQuestion() {
+        countries.shuffle()
+        correctAnswer = Int.random(in: 0...2)
     }
 }
 
