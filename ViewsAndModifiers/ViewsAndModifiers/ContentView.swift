@@ -76,6 +76,9 @@ struct ContentView: View {
                 Image(systemName: "\(row * 4 + column).circle")
                 Text("R\(row)*C\(column)")
             }
+            
+            Text("Prominent")
+                .prominent()
         }
     }
 }
@@ -84,11 +87,11 @@ extension View {
     func titleStyle() -> some View {
         modifier(Title())
     }
-}
-
-extension View {
     func waterMarked(with text:String) -> some View {
         modifier(WaterMark(text: text))
+    }
+    func prominent() -> some View {
+        modifier(ProminentTitle())
     }
 }
 
@@ -116,6 +119,19 @@ struct WaterMark: ViewModifier{
                 .padding(5)
                 .background(.black )
         }
+    }
+}
+
+struct ProminentTitle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.largeTitle.bold())
+            .foregroundColor(.blue)
+            .padding(5)
+            .background(.yellow)
+            .padding()
+            .background(.blue)
+            .clipShape(Ellipse())
     }
 }
 

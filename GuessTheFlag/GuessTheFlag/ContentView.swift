@@ -48,10 +48,7 @@ struct ContentView: View {
                         Button {
                             flagTapped(number)
                         }label: {
-                            Image(countries[number])
-                                .renderingMode(.original)
-                                .clipShape(Capsule())
-                                .shadow(radius: 5)
+                            FlagImage(countryImageName: countries[number], clipShape: Capsule(), shadowRadius: 10)
                         }
                     }
                 }
@@ -99,6 +96,19 @@ struct ContentView: View {
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+    }
+}
+
+struct FlagImage<S>: View where S:Shape{
+    let countryImageName: String
+    let clipShape: S
+    let shadowRadius: CGFloat
+    
+    var body: some View {
+        Image(countryImageName)
+            .renderingMode(.original)
+            .clipShape(clipShape)
+            .shadow(radius: shadowRadius)
     }
 }
 
