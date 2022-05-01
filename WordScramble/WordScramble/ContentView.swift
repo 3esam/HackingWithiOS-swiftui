@@ -25,6 +25,12 @@ struct ContentView: View {
                 }
                 
                 Section {
+                    Text("\(CalculateScore())")
+                } header: {
+                    Text("Score")
+                }
+                
+                Section {
                     ForEach(usedWords, id: \.self) { word in
                         HStack{
                             Image(systemName: "\(word.count).circle")
@@ -41,6 +47,9 @@ struct ContentView: View {
             }, message: {
                 Text(errorMessage)
             })
+            .toolbar{
+                Button("New Word"){startGame()}
+            }
         }
     }
     
@@ -55,6 +64,16 @@ struct ContentView: View {
         
         guard isPossible(word: answer) else {
             wordError(title: "Word not possible", message: "You can't spell that word from '\(rootWord)'!")
+            return
+        }
+        
+        guard lettersCount(word: answer, minCount: 4) else {
+            wordError(title: "Small word", message: "Try more than 3 letters")
+            return
+        }
+        
+        guard startOfRootWord(word: answer) else {
+            wordError(title: "Thats too easy", message: "Don't pick same rootword sequence.")
             return
         }
         
@@ -74,6 +93,7 @@ struct ContentView: View {
             if let startWords = try? String(contentsOf: startWordsURL) {
                 let allWords = startWords.components(separatedBy: "\n")
                 rootWord = allWords.randomElement() ?? "silkworm"
+                usedWords.removeAll()
                 return
             }
         }
@@ -111,6 +131,20 @@ struct ContentView: View {
         errorTitle = title
         errorMessage = message
         showingError = true
+    }
+    
+    func lettersCount(word: String, minCount: Int) -> Bool {
+        return word.count >= minCount
+    }
+    
+    func startOfRootWord(word: String) -> Bool {
+        let subString = rootWord.prefix(min(word.count, rootWord.count))
+        let exactlyEqual = subString.lowercased().elementsEqual(word.lowercased())
+        return !exactlyEqual
+    }
+    
+    func CalculateScore() -> Int {
+        usedWords.joined().count
     }
 }
 
