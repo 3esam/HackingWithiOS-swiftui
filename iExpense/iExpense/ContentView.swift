@@ -14,17 +14,14 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach(expenses.items) { item in
-                    HStack {
-                        VStack {
-                            Text(item.name)
-                            Text(item.type)
-                        }
-                        Spacer()
-                        Text(item.amount, format: .currency(code: "USD"))
-                    }
+                ForEach(expenses.personalItems) { item in
+                    listItem(item: item)
                 }
-                .onDelete(perform: removeItems(at:))
+                .onDelete(perform: removePersonalItems(at:))
+                ForEach(expenses.businessItems) { item in
+                    listItem(item: item)
+                }
+                .onDelete(perform: removeBusinessItems(at:))
             }
             .navigationTitle("iExpense")
             .toolbar {
@@ -40,8 +37,49 @@ struct ContentView: View {
         }
     }
     
-    func removeItems(at offsets: IndexSet){
-        expenses.items.remove(atOffsets: offsets)
+    func removePersonalItems(at offsets: IndexSet){
+        for offset in offsets {
+            if let index = expenses.items.firstIndex(where: { $0.id == expenses.personalItems[offset].id}) {
+                expenses.items.remove(at: index)
+            }
+        }
+    }
+    
+    func removeBusinessItems(at offsets: IndexSet){
+        for offset in offsets {
+            if let index = expenses.items.firstIndex(where: { $0.id == expenses.businessItems[offset].id}) {
+                expenses.items.remove(at: index)
+            }
+        }
+    }
+}
+
+struct listItem: View {
+    let item: ExpenseItem
+    
+    var body: some View {
+        HStack {
+            VStack {
+                Text(item.name)
+                Text(item.type)
+            }
+            Spacer()
+            Text(item.amount, format: .currency(code: Locale.current.currencyCode ?? "USD"))
+                .foregroundColor(colorFromAmount(item.amount))
+        }
+    }
+    
+    func colorFromAmount(_ amount: Double) -> Color {
+        switch amount {
+        case ...10:
+            return Color.green
+        case 10...100:
+            return Color.yellow
+        case 100...:
+            return Color.red
+        default:
+            return Color.blue
+        }
     }
 }
 

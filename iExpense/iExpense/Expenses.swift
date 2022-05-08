@@ -8,6 +8,18 @@
 import Foundation
 
 class Expenses: ObservableObject {
+    var personalItems: [ExpenseItem] {
+        get {
+            items.filter({ $0.type == "Personal" })
+        }
+    }
+    
+    var businessItems: [ExpenseItem] {
+        get {
+            items.filter({ $0.type == "Business" })
+        }
+    }
+    
     @Published var items = [ExpenseItem]() {
         didSet {
             if let encoded = try? JSONEncoder().encode(items) {
