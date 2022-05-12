@@ -118,6 +118,8 @@ struct ContentView: View {
     @State private var rows = 4
     @State private var columns = 4
     
+    @State private var arrowWidth = 0.2
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -227,8 +229,6 @@ struct ContentView: View {
                     .padding()
                 
                 HStack {
-                    Spacer()
-                    
                     Checkerboard(rows: rows, columns: columns)
                         .frame(width: 100, height: 100)
                         .onTapGesture {
@@ -238,8 +238,6 @@ struct ContentView: View {
                             }
                         }
                     
-                    Spacer()
-                    
                     NavigationLink {
                         SpirographView()
                     } label: {
@@ -247,7 +245,13 @@ struct ContentView: View {
                             .font(.headline)
                     }
                     
-                    Spacer()
+                    Arrow(arrowWidth: arrowWidth)
+                        .frame(width: 100, height: 100)
+                        .onTapGesture {
+                            withAnimation {
+                                arrowWidth = Double.random(in: 0.1...1)
+                            }
+                        }
                 }
             }
             .navigationBarTitle("Drawing", displayMode: .inline)
@@ -401,6 +405,33 @@ struct SpirographView: View {
                             .padding(.horizontal)
                     }
                 }
+    }
+}
+
+struct Arrow: Shape {
+    var arrowWidth: Double
+    
+    var animatableData: Double {
+        get { arrowWidth }
+        set { arrowWidth = newValue }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        let headWidth = (rect.width * arrowWidth)
+        let lineWidth = headWidth / 2
+        
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX - headWidth, y: rect.minY + headWidth))
+        path.addLine(to: CGPoint(x: rect.midX - lineWidth, y: rect.minY + headWidth))
+        path.addLine(to: CGPoint(x: rect.midX - lineWidth, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.midX + lineWidth, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.midX + lineWidth, y: rect.minY + headWidth))
+        path.addLine(to: CGPoint(x: rect.midX + headWidth, y: rect.minY + headWidth))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
+        
+        return path
     }
 }
 
