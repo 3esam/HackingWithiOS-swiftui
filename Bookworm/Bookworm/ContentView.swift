@@ -8,61 +8,63 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var rememberMe = false
-    
-    @AppStorage("notes") private var notes = ""
-    
     @Environment(\.managedObjectContext) var moc
-    @FetchRequest(sortDescriptors: []) var students: FetchedResults<Student>
+    @FetchRequest(sortDescriptors: [
+        SortDescriptor(\.title),
+        SortDescriptor(\.author)
+    ]) var books: FetchedResults<Book>
+    
+    @State private var showingAddScreen = false
     
     var body: some View {
-        VStack {
-            PushButton(title: "Remember Me", isOn: $rememberMe)
-            Text(rememberMe ? "On" : "Off")
-            
-            TextEditor(text: $notes)
-                .padding()
-                .border(.secondary, width: 5)
-            
-            List(students) { student in
-                Text(student.name ?? "Unknown")
+        NavigationView {
+            List {
+                ForEach(books) { book in
+                    NavigationLink {
+                        DetailView(book: book)
+                    } label: {
+                        HStack {
+                            EmojiRatingView(rating: book.rating)
+                                .font(.largeTitle)
+                            
+                            VStack(alignment: .leading) {
+                                Text(book.title ?? "Unknown Title")
+                                    .font(.headline)
+                                Text(book.author ?? "Unknown Author")
+                                    .font(.headline)
+                            }
+                        }
+                    }
+                }
+                .onDelete(perform: deleteBooks)
             }
-            
-            Button("Add") {
-                let firstNames = ["name1", "name2", "name3", "name4", "name5"]
-                let lastNames = ["last1", "last2", "last3", "last4", "last5"]
+            .navigationTitle("Bookworm")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    EditButton()
+                }
                 
-                let chosenFirstName = firstNames.randomElement()!
-                let chosesLastName = lastNames.randomElement()!
-                
-                let student = Student(context: moc)
-                student.id = UUID()
-                student.name = "\(chosenFirstName) \(chosesLastName)"
-                
-                try? moc.save()
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingAddScreen.toggle()
+                    } label: {
+                        Label("Add Book", systemImage: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddScreen) {
+                AddBookView()
             }
         }
     }
-}
-
-struct PushButton: View {
-    let title: String
-    @Binding var isOn: Bool
     
-    var onColors = [Color.yellow, Color.red]
-    var offColors = [Color(white: 0.6), Color(white: 0.4)]
-    
-    var body: some View {
-        Button(title) {
-            isOn.toggle()
+    func deleteBooks(at offsets: IndexSet) {
+        for offset in offsets {
+            let book = books[offset]
+            moc.delete(book)
         }
-        .padding()
-        .background(
-            LinearGradient(colors: isOn ? onColors : offColors, startPoint: .top, endPoint: .bottom)
-        )
-        .foregroundColor(.white)
-        .clipShape(Capsule())
-        .shadow(radius: isOn ? 0 : 5)
+        
+//        try? moc.save()
     }
 }
 
