@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CheckoutView: View {
-    @ObservedObject var order: Order
+    @ObservedObject var order: OrderClass
     
     @State private var confirmationMessage = ""
     @State private var showingConfirmationMessage = false
@@ -46,7 +46,7 @@ struct CheckoutView: View {
     }
     
     func placeOrder() async {
-        guard let encoded = try? JSONEncoder().encode(order) else {
+        guard let encoded = try? JSONEncoder().encode(order.orderStruct) else {
             print("Failed to encode order")
             return
         }
@@ -59,17 +59,19 @@ struct CheckoutView: View {
         do {
             let (data, _) = try await URLSession.shared.upload(for: request, from: encoded)
             
-            let decodedOrder = try JSONDecoder().decode(Order.self, from: data)
-            confirmationMessage = "Your order for \(decodedOrder.quantity)x \(Order.types[decodedOrder.type].lowercased()) cupcakes is on its way!"
+            let decodedOrder = try JSONDecoder().decode(OrderStruct.self, from: data)
+            confirmationMessage = "Your order for \(decodedOrder.quantity)x \(OrderClass.types[decodedOrder.type].lowercased()) cupcakes is on its way!"
             showingConfirmationMessage = true
         } catch {
             print("Checkout failed")
+            confirmationMessage = "Failed to contact server, please try again later"
+            showingConfirmationMessage = true
         }
     }
 }
 
 struct CheckoutView_Previews: PreviewProvider {
     static var previews: some View {
-        CheckoutView(order: Order())
+        CheckoutView(order: OrderClass())
     }
 }
