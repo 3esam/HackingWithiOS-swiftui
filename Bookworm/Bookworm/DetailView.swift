@@ -21,14 +21,25 @@ struct DetailView: View {
                     .resizable()
                     .scaledToFit()
                 
-                Text(book.genre?.uppercased() ?? "FANTASY")
-                    .font(.caption)
-                    .fontWeight(.black)
-                    .padding(8)
-                    .foregroundColor(.white)
-                    .background(.black.opacity(0.75))
-                    .clipShape(Capsule())
-                    .offset(x: -5, y: -5)
+                VStack {
+                    Text(book.genre?.uppercased() ?? "FANTASY")
+                        .font(.caption)
+                        .fontWeight(.black)
+                        .padding(8)
+                        .foregroundColor(.white)
+                        .background(.black.opacity(0.75))
+                        .clipShape(Capsule())
+                        .offset(x: -5, y: -5)
+                    
+                    Text(formatedDateString(from: book.date))
+                        .font(.caption)
+                        .fontWeight(.black)
+                        .padding(8)
+                        .foregroundColor(.white)
+                        .background(.black.opacity(0.75))
+                        .clipShape(Capsule())
+                        .offset(x: -5, y: -5)
+                }
             }
             
             Text(book.author ?? "Unknown author")
@@ -63,5 +74,13 @@ struct DetailView: View {
         
         try? moc.save()
         dismiss()
+    }
+    
+    func formatedDateString(from date: Date?) -> String {
+        if (date == nil) {
+            return "N/A"
+        } else {
+            return date!.formatted(date: .abbreviated, time: .omitted)
+        }
     }
 }
