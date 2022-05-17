@@ -17,9 +17,9 @@ struct FilteredList<T: NSManagedObject, Content: View>: View {
         ForEach(fetchRequest, id: \.self, content: content)
     }
     
-    init(filterKey: String, filterPredicate: FilterPredicate, filterValue: String, @ViewBuilder content: @escaping (T) -> Content) {
+    init(filterKey: String, filterPredicate: FilterPredicate, filterValue: String, sortDescriptors: [NSSortDescriptor], @ViewBuilder content: @escaping (T) -> Content) {
         _fetchRequest = FetchRequest<T>(
-            sortDescriptors: [],
+            sortDescriptors: sortDescriptors,
             predicate: NSPredicate(format: "%K \(filterPredicate.rawValue) %@", filterKey, filterValue)
         )
         

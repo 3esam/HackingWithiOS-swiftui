@@ -65,10 +65,10 @@ struct ContentView: View {
             FilteredList(
                 filterKey: "firstName",
                 filterPredicate: .containss,
-                filterValue: lastNameFilter
-//                sortDescriptors: [
-//                    SortDescriptor(\.firstName)
-//                ]
+                filterValue: lastNameFilter,
+                sortDescriptors: [
+                    NSSortDescriptor(keyPath: \Singer.firstName, ascending: false)
+                ]
             )
             {
                 (singer: Singer) in
