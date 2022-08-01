@@ -10,120 +10,123 @@ import CoreImage.CIFilterBuiltins
 import SwiftUI
 
 struct ContentView: View {
-    @State private var blurAmount = 0.0
-    
-    @State private var showingconfirmation = false
-    @State private var backgroundColor = Color.white
-    
     @State private var image: Image?
+    @State private var filterIntensity = 0.5
     
-    @State private var imageFromPicker: Image?
-    @State private var showingImageFromPicker = false
-    
+    @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
+    @State private var processedImage: UIImage?
+    
+    @State private var currentFilter: CIFilter = CIFilter.sepiaTone()
+    let context = CIContext()
+    
+    @State private var showingFilterSheet = false
     
     var body: some View {
-        VStack {
-            Text("Hello, world!")
-                .blur(radius: blurAmount)
-            
-            Slider(value: $blurAmount, in: 0...20)
-                .onChange(of: blurAmount){ newValue in
-                    print("New Value is \(newValue)")
+        NavigationView {
+            VStack {
+                ZStack {
+                    Rectangle()
+                        .fill(.secondary)
+                    
+                    Text("Tap to select a picture")
+                        .foregroundColor(.white)
+                        .font(.headline)
+                    
+                    image?
+                        .resizable()
+                        .scaledToFit()
                 }
-            
-            Button("Random Blue"){
-                blurAmount = Double.random(in: 0...20)
-            }
-            
-            Text("Hello, World!")
-                .frame(width: 200, height: 60)
-                .background(backgroundColor)
                 .onTapGesture {
-                    showingconfirmation = true
+                    showingImagePicker = true
                 }
-                .confirmationDialog("Change background", isPresented: $showingconfirmation){
-                    Button("Red") { backgroundColor = .red }
-                    Button("Green") { backgroundColor = .green }
-                    Button("Blue") { backgroundColor = .blue }
-                    Button("Cancel", role: .cancel) { }
-                } message: {
-                    Text("Select new color")
-                }
-            
-            VStack {
-                image?
-                    .resizable()
-                    .scaledToFit()
-            }
-            .onAppear(perform: loadImage)
-            
-            VStack {
-                imageFromPicker?
-                    .resizable()
-                    .scaledToFit()
                 
-                Button("select image") {
-                    showingImageFromPicker = true
+                HStack {
+                    Text("Intensity")
+                    Slider(value: $filterIntensity)
+                        .onChange(of: filterIntensity, perform: { _ in applyProcessing() })
+                }
+                .padding(.vertical)
+                
+                HStack {
+                    Button("Change Filter") {
+                        showingFilterSheet = true
+                    }
+                    
+                    Spacer()
+                    
+                    Button("Save", action: save)
+                        .disabled(image == nil)
                 }
             }
-            .sheet(isPresented: $showingImageFromPicker){
+            .padding([.horizontal, .bottom])
+            .navigationTitle("Instafilter")
+            .onChange(of: inputImage, perform: { _ in loadImage() })
+            .sheet(isPresented: $showingImagePicker) {
                 ImagePicker(image: $inputImage)
             }
-            .onChange(of: inputImage) { _ in
-                loadImageFromPicker()
+            .confirmationDialog("Select a filter", isPresented: $showingFilterSheet) {
+                Button("Crystallize") { setFilter(CIFilter.crystallize()) }
+                Button("Edges") { setFilter(CIFilter.edges()) }
+                Button("Gaussian Blur") { setFilter(CIFilter.gaussianBlur()) }
+                Button("Pixellate") { setFilter(CIFilter.pixellate()) }
+                Button("Sepia Tone") { setFilter(CIFilter.sepiaTone()) }
+                Button("Unsharp Mask") { setFilter(CIFilter.unsharpMask()) }
+                Button("Vignette") { setFilter(CIFilter.vignette()) }
+                Button("Cancel", role: .cancel) { }
             }
         }
-    }
-    
-    func loadImageFromPicker() {
-        guard let inputImage = inputImage else { return }
-        imageFromPicker = Image(uiImage: inputImage)
-        
-        // write image to library right away
-        let imageSaver = ImageSaver()
-        imageSaver.writeToPhotoAlbum(image: inputImage)
     }
     
     func loadImage() {
-//        image = Image("Example")
-        guard let inputImage = UIImage(named: "Example") else { return }
+        guard let inputImage = inputImage else { return }
+        
         let beginImage = CIImage(image: inputImage)
+        currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
+        applyProcessing()
+    }
+    
+    func save() {
+        guard let processedImage = processedImage else { return }
+
+        let imageSaver = ImageSaver()
         
-//        let currentFilter = CIFilter.sepiaTone()
-//        currentFilter.intensity = 1
-//        let currentFilter = CIFilter.pixellate()
-//        currentFilter.scale = 50
-//        let currentFilter = CIFilter.crystallize()
-//        currentFilter.radius = 50
-        let currentFilter = CIFilter.twirlDistortion()
-        
-        let amount = 1.0
-        let inputKeys = currentFilter.inputKeys
-        
-        if inputKeys.contains(kCIInputIntensityKey){
-            currentFilter.setValue(amount, forKey: kCIInputIntensityKey)
+        imageSaver.successHandler = {
+            print("Success!")
         }
         
-        if inputKeys.contains(kCIInputRadiusKey){
-            currentFilter.setValue(amount * 200, forKey: kCIInputRadiusKey)
+        imageSaver.errorHandler = {
+            print("Ooops! \($0.localizedDescription)")
         }
         
-        if inputKeys.contains(kCIInputScaleKey){
-            currentFilter.setValue(amount * 10, forKey: kCIInputScaleKey)
+        imageSaver.writeToPhotoAlbum(image: processedImage)
+    }
+    
+    func applyProcessing() {
+        let inputkeys = currentFilter.inputKeys
+        
+        if inputkeys.contains(kCIInputIntensityKey){
+            currentFilter.setValue(filterIntensity, forKey: kCIInputIntensityKey)
+        }
+        if inputkeys.contains(kCIInputRadiusKey){
+            currentFilter.setValue(filterIntensity * 200, forKey: kCIInputRadiusKey)
+        }
+        if inputkeys.contains(kCIInputScaleKey){
+            currentFilter.setValue(filterIntensity * 10, forKey: kCIInputScaleKey)
         }
         
-        currentFilter.radius = 1000
-        currentFilter.center = CGPoint(x: inputImage.size.width / 2, y: inputImage.size.height / 2)
-        
-        currentFilter.inputImage = beginImage
         guard let outputImage = currentFilter.outputImage else { return }
         
-        let context = CIContext()
         if let cgimg = context.createCGImage(outputImage, from: outputImage.extent) {
             let uiImage = UIImage(cgImage: cgimg)
             image = Image(uiImage: uiImage)
+            processedImage = uiImage
         }
+    }
+    
+    func setFilter(_ filter: CIFilter) {
+        currentFilter = filter
+        loadImage()
     }
 }
 
